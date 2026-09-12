@@ -1,0 +1,24 @@
+streamlit
+groq
+torch
+torchvision
+torchxrayvision
+grad-cam
+opencv-python-headless
+pillow
+numpy<2
+scikit-image
+python-dotenv
+pydantic
+langgraph
+langchain-groq
+langchain-core
+huggingface_hub
+reportlab>=4.2
+arabic-reshaper>=3.0.0
+python-bidi>=0.6.0
+
+
+
+# fonts-noto-core is a Debian/Ubuntu system package; Noto Urdu fonts are installed on Windows separately.
+
