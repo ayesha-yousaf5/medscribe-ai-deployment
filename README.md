@@ -8,7 +8,7 @@ produces a plain-language patient summary in the patient's own language.
 
 ## ✨ Features
 
-- 🖼️ Chest X-ray analysis using a pretrained DenseNet121 (18 pathologies)
+- 🖼️ Chest X-ray analysis using a fine-tuned ResNet18 (NORMAL / PNEUMONIA)
 - 🔥 Grad-CAM heatmap showing where the AI looked
 - 🧠 Agentic workflow — the LLM decides which tools to call, in what order
 - 📋 Structured clinical report (findings → impression → recommendation → urgency)
@@ -22,10 +22,10 @@ produces a plain-language patient summary in the patient's own language.
 
 User uploads X-ray + picks language
         ↓
-AGENT (LangGraph ReAct + openai/gpt-oss-120b via Groq)
+AGENT (LangGraph ReAct + `openai/gpt-oss-120b` via Groq)
         ↓
   decides to call:
-    1. detect_findings        → DenseNet121 detects 18 pathologies
+    1. detect_findings        → ResNet18 classifies NORMAL / PNEUMONIA
     2. write_clinical_report  → structured report
     3. assess_urgency         → routine / urgent / critical
     4. escalate_to_doctor     → only if critical
@@ -41,11 +41,13 @@ Streamlit UI:
 | Layer | Tool |
 |---|---|
 | Frontend | Streamlit (tabbed UI) |
-| CV Model | TorchXRayVision (`densenet121-res224-all`) |
+| CV Model | Fine-tuned ResNet18 checkpoint |
 | Explainability | Grad-CAM |
 | Agent Framework | LangGraph (ReAct) |
 | LLM | `openai/gpt-oss-120b` via Groq |
 | Language | Python 3.11 |
+| Deployment | Streamlit Community Cloud |
+| Model hosting | Hugging Face (`TabasumDev/medscribe-resnet18`) |
 
 ---
 
@@ -55,14 +57,14 @@ Streamlit UI:
     ├── app.py              # Streamlit UI (tabbed)
     ├── orchestrator.py     # LangGraph ReAct agent
     ├── tools.py            # Agent tools
-    ├── vision.py           # DenseNet121 + Grad-CAM
+    ├── vision.py           # ResNet18 + Grad-CAM
     ├── agent.py            # LLM report generation
     ├── report.py           # Output formatting
     ├── prompts.py          # LLM prompts
     ├── settings.py         # Config + env loading
     ├── requirements.txt
-    ├── .env                # (not committed)
-    ├── samples/            # Demo X-rays
+    ├── fonts/              # Bundled Urdu-capable Noto font
+    ├── packages.txt        # Streamlit Cloud system packages
     └── outputs/            # Generated results + traces
 
 ---
@@ -93,6 +95,21 @@ Get a free key at https://console.groq.com/keys
 
 Open http://localhost:8501
 
+### Streamlit Community Cloud
+
+Deploy `ayesha-yousaf5/medscribe-ai-deployment` with `app.py` as the main
+file. Add this secret under the app settings:
+
+    GROQ_API_KEY = "your_groq_key_here"
+
+The ResNet checkpoint is not committed to GitHub. If the local
+`models/medscribe_model_a_resnet18.pth` file is unavailable, `vision.py`
+downloads it automatically from the public Hugging Face repository
+`TabasumDev/medscribe-resnet18`.
+
+The Urdu-capable font is bundled at `fonts/NotoNaskhArabic.ttf`, so Urdu PDF
+export does not depend on a platform-specific font installation.
+
 ---
 
 ## 🧪 Usage
@@ -112,7 +129,7 @@ Open http://localhost:8501
 
 The agent is a **ReAct loop** built with LangGraph. Given a scan, it:
 
-1. Calls `detect_findings` to run the CV model
+1. Calls `detect_findings` to run the ResNet18 model on the image
 2. Calls `write_clinical_report` with the findings
 3. Calls `assess_urgency` on the report
 4. If urgency is **critical**, calls `escalate_to_doctor`
